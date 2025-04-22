@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import useRecipeInformation from "../../hooks/useRecipeInformation";
 import { useEffect } from "react";
 import QuotaExceed from "../../components/QuotaExceed";
+import { convertUsdToPhp } from "../../utils/conversion";
 
 const RecipeInformation = () => {
   // Use params
@@ -157,7 +158,7 @@ const RecipeInformation = () => {
                 ></path>
               </svg>
               <span>
-                Price: ${(recipeInformation.pricePerServing / 100).toFixed(2)}{" "}
+                Price: {convertUsdToPhp(recipeInformation.pricePerServing)} {" "}
                 per serving
               </span>
             </div>
