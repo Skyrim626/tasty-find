@@ -12,6 +12,8 @@ import Filters from "../../components/Filters";
 import { Link } from "react-router-dom";
 import SearchBar from "../../components/SearchBar";
 import FilterOptions from "../../types/FilterOption";
+import { Helmet } from "react-helmet-async";
+import QuotaExceed from "../../components/QuotaExceed";
 
 // Home Page Component
 const Home: React.FC = () => {
@@ -31,7 +33,7 @@ const Home: React.FC = () => {
   });
 
   // Use Recipe
-  const { loading, recipes, searchRecipes } = useRecipe();
+  const { loading, isQuotaExceeded, recipes, searchRecipes } = useRecipe();
 
   const toggleFavorite = (recipe: Recipe): void => {
     const newFavorites = favorites.find((fav) => fav.id === recipe.id)
@@ -46,81 +48,92 @@ const Home: React.FC = () => {
     searchRecipes(ingredients, filters);
   };
 
+  if(isQuotaExceeded) {
+    return <QuotaExceed />
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <HeaderContainer>
-        <Link to={"/"} className="flex items-center">
-          <ChefHat className="h-8 w-8 text-amber-500" />
-          <h1 className="ml-2 text-2xl font-bold text-gray-800">TastyFind</h1>
-        </Link>
-        <nav className="flex space-x-4">
-          <TabButton
-            active={activeTab === "search"}
-            onClick={() => setActiveTab("search")}
-            icon={<Search className="h-4 w-4" />}
-            label="Find Recipes"
-          />
-          <TabButton
-            active={activeTab === "favorites"}
-            onClick={() => setActiveTab("favorites")}
-            icon={<Heart className="h-4 w-4" />}
-            label="Favorites"
-          />
-        </nav>
-      </HeaderContainer>
+    <>
+      <Helmet>
+        <title>Home - TastyFind</title>
+        <meta name="description" content="Find delicious recipes easily" />
+      </Helmet>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "search" ? (
-          <>
-            {/* Hero Section */}
-            <Hero />
-
-            {/* Search Section */}
-            <SearchBar
-              onSearch={handleSearchRecipe}
-              onFocusChange={setSearchInputFocused}
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <HeaderContainer>
+          <Link to={"/"} className="flex items-center">
+            <ChefHat className="h-8 w-8 text-amber-500" />
+            <h1 className="ml-2 text-2xl font-bold text-gray-800">TastyFind</h1>
+          </Link>
+          <nav className="flex space-x-4">
+            <TabButton
+              active={activeTab === "search"}
+              onClick={() => setActiveTab("search")}
+              icon={<Search className="h-4 w-4" />}
+              label="Find Recipes"
             />
+            <TabButton
+              active={activeTab === "favorites"}
+              onClick={() => setActiveTab("favorites")}
+              icon={<Heart className="h-4 w-4" />}
+              label="Favorites"
+            />
+          </nav>
+        </HeaderContainer>
 
-            {/* Filters */}
-            <div className="mt-6">
-              <button
-                onClick={() => setFiltersOpen(!filtersOpen)}
-                className="flex items-center text-gray-600 hover:text-gray-900 font-medium"
-              >
-                <ListFilter className="mr-2 h-5 w-5" />
-                {filtersOpen ? "Hide Filters" : "Show Filters"}
-              </button>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {activeTab === "search" ? (
+            <>
+              {/* Hero Section */}
+              <Hero />
 
-              {filtersOpen && (
-                <Filters
-                  filters={filters}
-                  onFilterChange={(newFilters) => setFilters(newFilters)}
-                />
-              )}
-            </div>
+              {/* Search Section */}
+              <SearchBar
+                onSearch={handleSearchRecipe}
+                onFocusChange={setSearchInputFocused}
+              />
 
-            {/* Results */}
-            <RecipeList
-              loading={loading}
-              recipes={recipes}
+              {/* Filters */}
+              <div className="mt-6">
+                <button
+                  onClick={() => setFiltersOpen(!filtersOpen)}
+                  className="flex items-center text-gray-600 hover:text-gray-900 font-medium"
+                >
+                  <ListFilter className="mr-2 h-5 w-5" />
+                  {filtersOpen ? "Hide Filters" : "Show Filters"}
+                </button>
+
+                {filtersOpen && (
+                  <Filters
+                    filters={filters}
+                    onFilterChange={(newFilters) => setFilters(newFilters)}
+                  />
+                )}
+              </div>
+
+              {/* Results */}
+              <RecipeList
+                loading={loading}
+                recipes={recipes}
+                favorites={favorites}
+                searchInputFocused={searchInputFocused}
+                toggleFavorite={toggleFavorite}
+              />
+            </>
+          ) : (
+            // Favorites Tab
+            <FavoritesView
               favorites={favorites}
-              searchInputFocused={searchInputFocused}
-              toggleFavorite={toggleFavorite}
+              onFavoriteClick={toggleFavorite}
             />
-          </>
-        ) : (
-          // Favorites Tab
-          <FavoritesView
-            favorites={favorites}
-            onFavoriteClick={toggleFavorite}
-          />
-        )}
-      </main>
+          )}
+        </main>
 
-      {/* Footer */}
-      <Footer />
-    </div>
+        {/* Footer */}
+        <Footer />
+      </div>
+    </>
   );
 };
 

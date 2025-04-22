@@ -1,21 +1,25 @@
-import { useState } from "react";
+// useRecipe.ts
+import { useState, useCallback } from "react";
 import spoonacularApi from "../api/axios";
 import Recipe from "../models/Recipe";
 import FilterOptions from "../types/FilterOption";
+import { isApiLimitError } from "../utils/errorHandling";
 
 const useRecipe = () => {
-  // Loading State
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-
-  // Recipe State
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState<boolean>(false);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
 
-  // Search Recipes
-  const searchRecipes = async (
+  const searchRecipes = useCallback(async (
     ingredients: string[] | string,
     filters: FilterOptions
   ) => {
+    // Check if we already know the quota is exceeded
+    if (isQuotaExceeded) {
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await spoonacularApi.get("/recipes/findByIngredients", {
@@ -30,19 +34,27 @@ const useRecipe = () => {
       });
 
       setRecipes(response.data);
-    } catch (error) {
+      setError("");
+    } catch (error: any) {
       console.error("Error fetching recipes:", error);
-      setError("Something is wrong when fetching recipies.");
+      
+      if (isApiLimitError(error)) {
+        setIsQuotaExceeded(true);
+        setError("API daily limit reached. Recipe search is unavailable at the moment.");
+      } else {
+        setError("Something went wrong when fetching recipes.");
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [isQuotaExceeded]);
 
   return {
     loading,
     error,
     recipes,
     searchRecipes,
+    isQuotaExceeded
   };
 };
 
