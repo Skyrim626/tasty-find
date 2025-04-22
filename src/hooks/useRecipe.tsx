@@ -1,6 +1,7 @@
 import { useState } from "react";
 import spoonacularApi from "../api/axios";
 import Recipe from "../models/Recipe";
+import FilterOptions from "../types/FilterOption";
 
 const useRecipe = () => {
   // Loading State
@@ -11,15 +12,19 @@ const useRecipe = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
 
   // Search Recipes
-  const searchRecipes = async (ingredients: any, filters = {}) => {
+  const searchRecipes = async (
+    ingredients: string[] | string,
+    filters: FilterOptions
+  ) => {
     setLoading(true);
     try {
       const response = await spoonacularApi.get("/recipes/findByIngredients", {
         params: {
-          ingredients: ingredients.join(","),
+          ingredients:
+            typeof ingredients === "string"
+              ? ingredients
+              : ingredients.join(","),
           number: 12,
-          ranking: 2,
-          ignorePantry: true,
           ...filters,
         },
       });

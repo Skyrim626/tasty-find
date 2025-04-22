@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search,Heart, ChefHat, ListFilter } from "lucide-react";
+import { Search, Heart, ChefHat, ListFilter } from "lucide-react";
 import Recipe from "../../models/Recipe";
 import FavoritesView from "../../components/FavoritesView";
 import TabButton from "../../components/TabButton";
@@ -8,8 +8,10 @@ import Hero from "./components/Hero";
 import HeaderContainer from "./components/HeaderContainer";
 import RecipeList from "../../components/RecipeList";
 import Footer from "./components/Footer";
-import SearchBar from "../../components/SearchBar";
 import Filters from "../../components/Filters";
+import { Link } from "react-router-dom";
+import SearchBar from "../../components/SearchBar";
+import FilterOptions from "../../types/FilterOption";
 
 // Home Page Component
 const Home: React.FC = () => {
@@ -19,7 +21,14 @@ const Home: React.FC = () => {
   });
   const [activeTab, setActiveTab] = useState<"search" | "favorites">("search");
   const [searchInputFocused, setSearchInputFocused] = useState<boolean>(false);
-  const [filtersOpen, setFiltersOpen] = useState<boolean>(false);
+  const [filtersOpen, setFiltersOpen] = useState<boolean>(true);
+
+  // Filter Options
+  const [filters, setFilters] = useState<FilterOptions>({
+    ranking: 1,
+    maxNumber: 5,
+    ignorePantry: true,
+  });
 
   // Use Recipe
   const { loading, recipes, searchRecipes } = useRecipe();
@@ -32,14 +41,19 @@ const Home: React.FC = () => {
     localStorage.setItem("favorites", JSON.stringify(newFavorites));
   };
 
+  // Handle Search
+  const handleSearchRecipe = (ingredients: string[]) => {
+    searchRecipes(ingredients, filters);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <HeaderContainer>
-        <div className="flex items-center">
+        <Link to={"/"} className="flex items-center">
           <ChefHat className="h-8 w-8 text-amber-500" />
           <h1 className="ml-2 text-2xl font-bold text-gray-800">TastyFind</h1>
-        </div>
+        </Link>
         <nav className="flex space-x-4">
           <TabButton
             active={activeTab === "search"}
@@ -64,7 +78,7 @@ const Home: React.FC = () => {
 
             {/* Search Section */}
             <SearchBar
-              onSearch={searchRecipes}
+              onSearch={handleSearchRecipe}
               onFocusChange={setSearchInputFocused}
             />
 
@@ -78,7 +92,12 @@ const Home: React.FC = () => {
                 {filtersOpen ? "Hide Filters" : "Show Filters"}
               </button>
 
-              {filtersOpen && <Filters onFilterChange={searchRecipes} />}
+              {filtersOpen && (
+                <Filters
+                  filters={filters}
+                  onFilterChange={(newFilters) => setFilters(newFilters)}
+                />
+              )}
             </div>
 
             {/* Results */}

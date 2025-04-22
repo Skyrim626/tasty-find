@@ -1,5 +1,6 @@
 import { Copy, ExternalLink, Heart, Star } from "lucide-react";
 import Recipe from "../../models/Recipe";
+import { Bounce, toast } from "react-toastify";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -19,10 +20,21 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
     navigator.clipboard.writeText(text);
     // Would add toast notification here in a real app
+    toast.success('📝 Ingredients Copied!', {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "dark",
+      transition: Bounce,
+      });
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col">
       <div className="relative">
         <img
           src={recipe.image}
@@ -48,7 +60,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-grow">
         <h3 className="text-lg font-medium text-gray-900 line-clamp-2">
           {recipe.title}
         </h3>
@@ -87,7 +99,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           </ul>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-auto pt-4 grid grid-cols-2 gap-2">
           <button
             onClick={copyIngredients}
             className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200"

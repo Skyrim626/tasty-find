@@ -2,11 +2,14 @@ import { Plus, Search, X } from "lucide-react";
 import React, { useState } from "react";
 
 interface SearchBarProps {
-  onSearch: (value: any) => void;
+  onSearch: (ingredients: string[]) => void;
   onFocusChange: (focused: boolean) => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onFocusChange }) => {
+const SearchBar: React.FC<SearchBarProps> = ({
+  onSearch,
+  onFocusChange,
+}) => {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [currentIngredient, setCurrentIngredient] = useState<string>("");
 

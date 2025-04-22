@@ -1,7 +1,6 @@
 
 export default interface FilterOptions {
-  diet: string;
-  cuisine: string;
-  mealType: string;
-  maxReadyTime: string;
+  maxNumber: 5 | 10 | 15 | 20;
+  ranking: 1 | 2;
+  ignorePantry: boolean;
 }
