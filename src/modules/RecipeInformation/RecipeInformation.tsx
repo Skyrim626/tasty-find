@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import useRecipeInformation from "../../hooks/useRecipeInformation";
 import { useEffect } from "react";
 import QuotaExceed from "../../components/QuotaExceed";
@@ -8,6 +8,9 @@ import { convertUsdToPhp } from "../../utils/conversion";
 const RecipeInformation = () => {
   // Use params
   const { id } = useParams();
+
+  // Use Navigate
+  const navigate = useNavigate();
 
   const filterOption = {
     includeNutrition: false,
@@ -83,6 +86,15 @@ const RecipeInformation = () => {
       </Helmet>
 
       <div className="container mx-auto px-4 py-8">
+
+        {/* Go Back Button */}
+        <button
+          onClick={() => navigate(-1)} // Go back to the previous page
+          className="mb-4 p-2 bg-yellow-200 hover:bg-yellow-300 text-yellow-600 rounded-lg"
+        >
+          &larr; Go Back
+        </button>
+
         {/* Recipe Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-4">

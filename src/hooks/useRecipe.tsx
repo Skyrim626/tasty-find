@@ -28,8 +28,8 @@ const useRecipe = () => {
             typeof ingredients === "string"
               ? ingredients
               : ingredients.join(","),
-          number: 12,
-          ...filters,
+          number: filters.maxNumber,
+          ranking: filters.ranking,
         },
       });
 
