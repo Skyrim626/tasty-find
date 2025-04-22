@@ -15,8 +15,8 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFilterChange }) => {
 
   const numberOptions: number[] = [5, 10, 15, 20, 50, 100];
   const rankingOptions: { label: string; value: number }[] = [
-    { label: "Maximize Used Ingredients", value: 1 },
-    { label: "Minimize Missing Ingredients", value: 2 },
+    { label: "Rank 1", value: 1 },
+    { label: "Rank 2", value: 2 },
   ];
 
   const renderSelect = (
