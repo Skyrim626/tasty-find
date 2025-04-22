@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import RecipeInformation from "../models/RecipeInformation";
 import spoonacularApi from "../api/axios";
 import { isApiLimitError } from "../utils/errorHandling";
+import { RecipeInformation } from "../models/RecipeInformation";
 
 const useRecipeInformation = () => {
   // Loading State

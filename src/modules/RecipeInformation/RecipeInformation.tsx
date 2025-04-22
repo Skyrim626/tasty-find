@@ -23,7 +23,7 @@ const RecipeInformation = () => {
     if (id) {
       getRecipeInformation(id, filterOption);
     }
-  }, []);
+  }, [id, getRecipeInformation]);
 
   // SEO (Search Engine Optimization)
   const recipeMeta = {
@@ -51,6 +51,10 @@ const RecipeInformation = () => {
     );
   }
 
+  if (isQuotaExceeded) {
+    return <QuotaExceed />;
+  }
+
   if (!recipeInformation) {
     return null;
   }
@@ -69,10 +73,6 @@ const RecipeInformation = () => {
       }`;
     }
   };
-
-  if(isQuotaExceeded) {
-    return <QuotaExceed />
-  }
 
   return (
     <>
@@ -166,9 +166,9 @@ const RecipeInformation = () => {
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-6">
             {recipeInformation.diets &&
-              recipeInformation.diets.map((diet, index) => (
+              recipeInformation.diets.map((diet, index: number) => (
                 <span
-                  key={index}
+                  key={`diet-${index}`}
                   className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded"
                 >
                   {diet}
@@ -177,7 +177,7 @@ const RecipeInformation = () => {
             {recipeInformation.dishTypes &&
               recipeInformation.dishTypes.map((dishType, index) => (
                 <span
-                  key={index}
+                  key={`dish-${index}`}
                   className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
                 >
                   {dishType}
@@ -210,7 +210,7 @@ const RecipeInformation = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left Column - Image */}
           <div className="md:col-span-1">
-            <div className="sticky top-8">
+            <div className="lg:sticky lg:top-8">
               <img
                 src={recipeInformation.image}
                 alt={recipeInformation.title}
@@ -218,7 +218,7 @@ const RecipeInformation = () => {
               />
 
               {/* Source Info */}
-              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm mb-4">
                 <h3 className="font-medium text-gray-800 mb-2">Source</h3>
                 <p className="text-sm text-gray-600">
                   Recipe by {recipeInformation.sourceName || "Unknown"}
@@ -233,6 +233,37 @@ const RecipeInformation = () => {
                     </a>
                   )}
                 </p>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="bg-yellow-50 p-4 rounded-lg shadow-sm">
+                <h3 className="font-medium text-gray-800 mb-2">Quick Stats</h3>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex justify-between">
+                    <span className="text-gray-600">Preparation:</span>
+                    <span className="font-medium">
+                      {formatTime(recipeInformation.preparationMinutes)}
+                    </span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span className="text-gray-600">Cooking:</span>
+                    <span className="font-medium">
+                      {formatTime(recipeInformation.cookingMinutes)}
+                    </span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span className="text-gray-600">Servings:</span>
+                    <span className="font-medium">{recipeInformation.servings}</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span className="text-gray-600">Health Score:</span>
+                    <span className="font-medium">{recipeInformation.healthScore}/100</span>
+                  </li>
+                  <li className="flex justify-between">
+                    <span className="text-gray-600">WW Points:</span>
+                    <span className="font-medium">{recipeInformation.weightWatcherSmartPoints}</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -255,11 +286,13 @@ const RecipeInformation = () => {
               <h2 className="text-xl font-bold text-gray-800 mb-3">
                 Ingredients
               </h2>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {recipeInformation.extendedIngredients.map(
                   (ingredient, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-yellow-500 mt-2 mr-2"></span>
+                    <li key={`ingredient-${index}`} className="flex items-start p-2 rounded hover:bg-gray-50">
+                      <div className="h-6 w-6 flex-shrink-0 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-yellow-600 text-xs font-bold">{index + 1}</span>
+                      </div>
                       <span>
                         <strong>
                           {ingredient.measures.us.amount}{" "}
@@ -286,17 +319,48 @@ const RecipeInformation = () => {
               </h2>
               {recipeInformation.analyzedInstructions &&
               recipeInformation.analyzedInstructions.length > 0 ? (
-                <ol className="list-decimal list-inside space-y-3 text-gray-700">
-                  {/* {recipeInformation.analyzedInstructions[0].steps.map(
+                <ol className="space-y-4">
+                  {recipeInformation.analyzedInstructions[0].steps.map(
                     (step, index) => (
-                      <li key={index} className="pl-2">
-                        <span>{step.step}</span>
+                      <li key={`step-${index}`} className="pb-4 border-b border-gray-100 last:border-0">
+                        <div className="flex">
+                          <div className="h-8 w-8 flex-shrink-0 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-blue-600 font-bold">{step.number}</span>
+                          </div>
+                          <div>
+                            <p className="text-gray-700">{step.step}</p>
+                            
+                            {/* Equipment and ingredients used in this step */}
+                            {(step.equipment?.length > 0 || step.ingredients?.length > 0) && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {step.equipment?.map((item, idx) => (
+                                  <span key={`equip-${idx}`} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+                                    {item.name}
+                                  </span>
+                                ))}
+                                {step.ingredients?.map((item, idx) => (
+                                  <span key={`ing-${idx}`} className="bg-yellow-50 text-yellow-700 text-xs px-2 py-1 rounded">
+                                    {item.name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {/* Time information if available */}
+                            {step.length && (
+                              <p className="text-sm text-gray-500 mt-1">
+                                ⏱️ {step.length.number} {step.length.unit}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </li>
                     )
-                  )} */}
+                  )}
                 </ol>
               ) : recipeInformation.instructions ? (
                 <div
+                  className="prose prose-sm max-w-none text-gray-700"
                   dangerouslySetInnerHTML={{
                     __html: recipeInformation.instructions,
                   }}
@@ -313,34 +377,37 @@ const RecipeInformation = () => {
             {recipeInformation.winePairing &&
               recipeInformation.winePairing.pairedWines &&
               recipeInformation.winePairing.pairedWines.length > 0 && (
-                <div className="mb-8 bg-amber-50 p-4 rounded-lg">
-                  <h2 className="text-xl font-bold text-gray-800 mb-3">
+                <div className="mb-8 bg-amber-50 p-6 rounded-lg shadow-sm">
+                  <h2 className="text-xl font-bold text-gray-800 mb-3 flex items-center">
+                    <svg className="w-6 h-6 mr-2 text-amber-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd"></path>
+                    </svg>
                     Wine Pairing
                   </h2>
-                  <p className="mb-2 text-gray-700">
+                  <p className="mb-3 text-gray-700">
                     {recipeInformation.winePairing.pairingText}
                   </p>
 
-                  <h3 className="font-medium text-gray-800 mt-3 mb-1">
-                    Recommended Wines:
+                  <h3 className="font-medium text-gray-800 mt-4 mb-2">
+                    Recommended Wine Types:
                   </h3>
-                  <ul className="list-disc list-inside text-gray-700">
+                  <div className="flex flex-wrap gap-2">
                     {recipeInformation.winePairing.pairedWines.map(
                       (wine, index) => (
-                        <li key={index} className="capitalize">
+                        <span key={`wine-${index}`} className="capitalize bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm">
                           {wine}
-                        </li>
+                        </span>
                       )
                     )}
-                  </ul>
+                  </div>
 
                   {recipeInformation.winePairing.productMatches &&
                     recipeInformation.winePairing.productMatches.length > 0 && (
-                      <div className="mt-4">
-                        <h3 className="font-medium text-gray-800 mb-2">
-                          Product Suggestion:
+                      <div className="mt-5 pt-4 border-t border-amber-200">
+                        <h3 className="font-medium text-gray-800 mb-3">
+                          Suggested Product:
                         </h3>
-                        <div className="flex">
+                        <div className="flex bg-white p-3 rounded-lg shadow-sm">
                           {recipeInformation.winePairing.productMatches[0]
                             .imageUrl && (
                             <img
@@ -352,24 +419,24 @@ const RecipeInformation = () => {
                                 recipeInformation.winePairing.productMatches[0]
                                   .title
                               }
-                              className="w-20 h-auto mr-3"
+                              className="w-20 h-auto object-contain mr-4"
                             />
                           )}
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-gray-800">
                               {
                                 recipeInformation.winePairing.productMatches[0]
                                   .title
                               }
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 mt-1">
                               {
                                 recipeInformation.winePairing.productMatches[0]
                                   .description
                               }
                             </p>
-                            <p className="text-sm mt-1">
-                              <span className="font-medium">
+                            <div className="flex items-center mt-2">
+                              <span className="font-medium text-green-600">
                                 {
                                   recipeInformation.winePairing
                                     .productMatches[0].price
@@ -377,71 +444,36 @@ const RecipeInformation = () => {
                               </span>
                               {recipeInformation.winePairing.productMatches[0]
                                 .averageRating && (
-                                <span className="ml-2">
-                                  Rating:{" "}
-                                  {(
-                                    recipeInformation.winePairing
-                                      .productMatches[0].averageRating * 5
-                                  ).toFixed(1)}
-                                  /5
-                                </span>
+                                <div className="ml-3 flex items-center">
+                                  <div className="flex">
+                                    {[...Array(5)].map((_, i) => (
+                                      <svg 
+                                        key={`star-${i}`}
+                                        className={`w-4 h-4 ${
+                                          i < Math.round(recipeInformation.winePairing.productMatches[0].averageRating * 5) 
+                                            ? 'text-yellow-400' 
+                                            : 'text-gray-300'
+                                        }`} 
+                                        fill="currentColor" 
+                                        viewBox="0 0 20 20"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                      </svg>
+                                    ))}
+                                  </div>
+                                  <span className="text-xs text-gray-500 ml-1">
+                                    ({(recipeInformation.winePairing.productMatches[0].averageRating * 5).toFixed(1)})
+                                  </span>
+                                </div>
                               )}
-                            </p>
+                            </div>
                           </div>
                         </div>
                       </div>
                     )}
                 </div>
               )}
-
-            {/* Related Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Cooking Time */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-800 mb-2">
-                  Cooking Information
-                </h3>
-                <ul className="space-y-1 text-sm">
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">Preparation Time:</span>
-                    <span>
-                      {formatTime(recipeInformation.preparationMinutes)}
-                    </span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">Cooking Time:</span>
-                    <span>{formatTime(recipeInformation.cookingMinutes)}</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">Total Time:</span>
-                    <span>{formatTime(recipeInformation.readyInMinutes)}</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Additional Details */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-800 mb-2">
-                  Additional Details
-                </h3>
-                <ul className="space-y-1 text-sm">
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">
-                      Weight Watcher Points:
-                    </span>
-                    <span>{recipeInformation.weightWatcherSmartPoints}</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">Health Score:</span>
-                    <span>{recipeInformation.healthScore} / 100</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-gray-600">Spoonacular Score:</span>
-                    <span>{recipeInformation.spoonacularScore} / 100</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
       </div>

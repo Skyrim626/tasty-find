@@ -43,7 +43,33 @@ interface ProductMatch {
   link: string;
 }
 
-interface RecipeInformation {
+interface Step {
+  number: number;
+  step: string;
+  ingredients: {
+    id: number;
+    name: string;
+    localizedName: string;
+    image: string;
+  }[];
+  equipment: {
+    id: number;
+    name: string;
+    localizedName: string;
+    image: string;
+  }[];
+  length?: {
+    number: number;
+    unit: string;
+  };
+}
+
+interface AnalyzedInstruction {
+  name: string;
+  steps: Step[];
+}
+
+export interface RecipeInformation {
   id: number;
   title: string;
   image: string;
@@ -59,7 +85,7 @@ interface RecipeInformation {
   healthScore: number;
   spoonacularScore: number;
   pricePerServing: number;
-  analyzedInstructions: string[];
+  analyzedInstructions: AnalyzedInstruction[];
   cheap: boolean;
   creditsText: string;
   cuisines: string[];
@@ -83,5 +109,3 @@ interface RecipeInformation {
   summary: string;
   winePairing: WinePairing;
 }
-
-export default RecipeInformation;
