@@ -1,76 +1,94 @@
-
-import { Plus, Search } from 'lucide-react';
-import React, { useState } from 'react';
+import { Plus, Search, X } from "lucide-react";
+import React, { useState } from "react";
 
 interface SearchBarProps {
-  onSearch: (value: any) => void;
+  onSearch: (ingredients: string[]) => void;
+  onFocusChange: (focused: boolean) => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
-  const [ingredients, setIngredients] = useState<any>([]);
-  const [currentIngredient, setCurrentIngredient] = useState('');
+const SearchBar: React.FC<SearchBarProps> = ({
+  onSearch,
+  onFocusChange,
+}) => {
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [currentIngredient, setCurrentIngredient] = useState<string>("");
 
-  const addIngredient = (e: any) => {
+  const addIngredient = (e: React.FormEvent): void => {
     e.preventDefault();
-    if (currentIngredient.trim() && !ingredients.includes(currentIngredient.trim())) {
+    if (
+      currentIngredient.trim() &&
+      !ingredients.includes(currentIngredient.trim())
+    ) {
       setIngredients([...ingredients, currentIngredient.trim()]);
-      setCurrentIngredient('');
+      setCurrentIngredient("");
     }
   };
 
-  const removeIngredient = (ingredient: any) => {
-    setIngredients(ingredients.filter((i: any) => i !== ingredient));
+  const removeIngredient = (ingredient: string): void => {
+    setIngredients(ingredients.filter((i) => i !== ingredient));
   };
 
-  const handleSearch = () => {
+  const handleSearch = (): void => {
     if (ingredients.length > 0) {
       onSearch(ingredients);
     }
   };
 
   return (
-    <div className="space-y-4">
+    <div className="bg-white rounded-xl shadow-md p-6">
       <form onSubmit={addIngredient} className="flex gap-2">
-        <input
-          type="text"
-          value={currentIngredient}
-          onChange={(e) => setCurrentIngredient(e.target.value)}
-          placeholder="Enter an ingredient"
-          className="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={currentIngredient}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setCurrentIngredient(e.target.value)
+            }
+            onFocus={() => onFocusChange(true)}
+            onBlur={() => onFocusChange(false)}
+            placeholder="Add an ingredient (e.g., eggs, bacon, cheese)"
+            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+        </div>
         <button
           type="submit"
-          className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+          className="p-3 rounded-lg bg-amber-500 text-white hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
         >
           <Plus className="h-5 w-5" />
         </button>
       </form>
 
-      <div className="flex flex-wrap gap-2">
-        {ingredients.map((ingredient: any) => (
-          <span
-            key={ingredient}
-            className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 flex items-center gap-1"
-          >
-            {ingredient}
-            <button
-              onClick={() => removeIngredient(ingredient)}
-              className="hover:text-blue-600"
-            >
-              ×
-            </button>
-          </span>
-        ))}
-      </div>
+      {ingredients.length > 0 && (
+        <>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {ingredients.map((ingredient) => (
+              <span
+                key={ingredient}
+                className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 flex items-center gap-1"
+              >
+                {ingredient}
+                <button
+                  onClick={() => removeIngredient(ingredient)}
+                  className="ml-1 hover:text-amber-900"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </span>
+            ))}
+          </div>
 
-      <button
-        onClick={handleSearch}
-        disabled={ingredients.length === 0}
-        className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-      >
-        <Search className="h-5 w-5" />
-        Search Recipes
-      </button>
+          <button
+            onClick={handleSearch}
+            className="mt-4 w-full py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 font-medium flex items-center justify-center"
+          >
+            <Search className="mr-2 h-5 w-5" />
+            Find Recipes
+          </button>
+        </>
+      )}
     </div>
   );
 };

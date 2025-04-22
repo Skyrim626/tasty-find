@@ -1,81 +1,139 @@
+import { useState } from "react";
+import { Search, Heart, ChefHat, ListFilter } from "lucide-react";
+import Recipe from "../../models/Recipe";
+import FavoritesView from "../../components/FavoritesView";
+import TabButton from "../../components/TabButton";
+import useRecipe from "../../hooks/useRecipe";
+import Hero from "./components/Hero";
+import HeaderContainer from "./components/HeaderContainer";
+import RecipeList from "../../components/RecipeList";
+import Footer from "./components/Footer";
+import Filters from "../../components/Filters";
+import { Link } from "react-router-dom";
+import SearchBar from "../../components/SearchBar";
+import FilterOptions from "../../types/FilterOption";
+import { Helmet } from "react-helmet-async";
+import QuotaExceed from "../../components/QuotaExceed";
 
-import  { useState } from 'react';
-import { motion } from 'framer-motion';
-import spoonacularApi from '../../api/axios';
-import SearchBar from '../../components/SearchBar';
-import RecipeCard from '../../components/RecipeCard';
-import Filters from '../../components/Filters';
-import Recipe from '../../components/models/Recipe';
-// import Filters from './components/Filters';
-
-const Home = () => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favorites');
+// Home Page Component
+const Home: React.FC = () => {
+  const [favorites, setFavorites] = useState<Recipe[]>(() => {
+    const saved = localStorage.getItem("favorites");
     return saved ? JSON.parse(saved) : [];
   });
+  const [activeTab, setActiveTab] = useState<"search" | "favorites">("search");
+  const [searchInputFocused, setSearchInputFocused] = useState<boolean>(false);
+  const [filtersOpen, setFiltersOpen] = useState<boolean>(true);
 
-  const searchRecipes = async (ingredients: any, filters = {}) => {
-    setLoading(true);
-    try {
+  // Filter Options
+  const [filters, setFilters] = useState<FilterOptions>({
+    ranking: 1,
+    maxNumber: 5,
+    ignorePantry: true,
+  });
 
-      const response = await spoonacularApi.get('/recipes/findByIngredients', {
-        params: {
-          ingredients: ingredients.join(','),
-          number: 12,
-          ranking: 2,
-          ignorePantry: true
-        }
-      });
+  // Use Recipe
+  const { loading, isQuotaExceeded, recipes, searchRecipes } = useRecipe();
 
-      setRecipes(response.data);
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-    }
-    setLoading(false);
-  };
-
-  const toggleFavorite = (recipe: any) => {
-    const newFavorites = favorites.find((fav: any) => fav.id === recipe.id)
-      ? favorites.filter((fav: any) => fav.id !== recipe.id)
+  const toggleFavorite = (recipe: Recipe): void => {
+    const newFavorites = favorites.find((fav) => fav.id === recipe.id)
+      ? favorites.filter((fav) => fav.id !== recipe.id)
       : [...favorites, recipe];
     setFavorites(newFavorites);
-    localStorage.setItem('favorites', JSON.stringify(newFavorites));
+    localStorage.setItem("favorites", JSON.stringify(newFavorites));
   };
 
+  // Handle Search
+  const handleSearchRecipe = (ingredients: string[]) => {
+    searchRecipes(ingredients, filters);
+  };
+
+  if(isQuotaExceeded) {
+    return <QuotaExceed />
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-4xl font-bold text-gray-900 text-center mb-8">
-          TastyFind
-        </h1>
-        <SearchBar onSearch={searchRecipes} />
-        <Filters onFilterChange={searchRecipes} />
-        
-        {loading ? (
-          <div className="flex justify-center mt-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          </div>
-        ) : (
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            {recipes.map((recipe: any) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                isFavorite={favorites.some((fav: any) => fav.id === recipe.id)}
-                onFavoriteClick={() => toggleFavorite(recipe)}
+    <>
+      <Helmet>
+        <title>Home - TastyFind</title>
+        <meta name="description" content="Find delicious recipes easily" />
+      </Helmet>
+
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <HeaderContainer>
+          <Link to={"/"} className="flex items-center">
+            <ChefHat className="h-8 w-8 text-amber-500" />
+            <h1 className="ml-2 text-2xl font-bold text-gray-800">TastyFind</h1>
+          </Link>
+          <nav className="flex space-x-4">
+            <TabButton
+              active={activeTab === "search"}
+              onClick={() => setActiveTab("search")}
+              icon={<Search className="h-4 w-4" />}
+              label="Find Recipes"
+            />
+            <TabButton
+              active={activeTab === "favorites"}
+              onClick={() => setActiveTab("favorites")}
+              icon={<Heart className="h-4 w-4" />}
+              label="Favorites"
+            />
+          </nav>
+        </HeaderContainer>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {activeTab === "search" ? (
+            <>
+              {/* Hero Section */}
+              <Hero />
+
+              {/* Search Section */}
+              <SearchBar
+                onSearch={handleSearchRecipe}
+                onFocusChange={setSearchInputFocused}
               />
-            ))}
-          </motion.div>
-        )}
+
+              {/* Filters */}
+              <div className="mt-6">
+                <button
+                  onClick={() => setFiltersOpen(!filtersOpen)}
+                  className="flex items-center text-gray-600 hover:text-gray-900 font-medium"
+                >
+                  <ListFilter className="mr-2 h-5 w-5" />
+                  {filtersOpen ? "Hide Filters" : "Show Filters"}
+                </button>
+
+                {filtersOpen && (
+                  <Filters
+                    filters={filters}
+                    onFilterChange={(newFilters) => setFilters(newFilters)}
+                  />
+                )}
+              </div>
+
+              {/* Results */}
+              <RecipeList
+                loading={loading}
+                recipes={recipes}
+                favorites={favorites}
+                searchInputFocused={searchInputFocused}
+                toggleFavorite={toggleFavorite}
+              />
+            </>
+          ) : (
+            // Favorites Tab
+            <FavoritesView
+              favorites={favorites}
+              onFavoriteClick={toggleFavorite}
+            />
+          )}
+        </main>
+
+        {/* Footer */}
+        <Footer />
       </div>
-    </div>
+    </>
   );
 };
 
